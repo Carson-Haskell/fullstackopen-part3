@@ -1,3 +1,3 @@
-# Full Stacl Open
+# Full Stack Open
 
-## Exercises for part 3 || phonebook-backend: 3.1 - 3.11
+#### Exercises for part 3 || phonebook-backend: 3.1 - 3.11
