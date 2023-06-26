@@ -58,10 +58,23 @@ app.post("/api/people", (req, res) => {
   person.save().then(savedPerson => res.json(savedPerson));
 });
 
-app.delete("/api/people/:id", (req, res) => {
+app.put("/api/people/:id", (req, res, next) => {
+  const { name, number } = req.body;
+
+  const person = {
+    name,
+    number,
+  };
+
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then(updatedPerson => res.json(updatedPerson))
+    .catch(err => next(err));
+});
+
+app.delete("/api/people/:id", (req, res, next) => {
   Person.findByIdAndDelete(req.params.id)
     .then(result => res.status(204).end())
-    .catch(err => console.log(err));
+    .catch(err => next(err));
 });
 
 const unknownEndpoint = (req, res) => {
