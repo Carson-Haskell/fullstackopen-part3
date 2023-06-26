@@ -37,13 +37,10 @@ app.get("/info", (req, res) => {
   );
 });
 
-app.get("/api/people/:id", (req, res) => {
+app.get("/api/people/:id", (req, res, next) => {
   Person.findById(req.params.id)
     .then(person => res.json(person))
-    .catch(err => {
-      console.log(err);
-      res.status(404).json({ error: "no such person exists" });
-    });
+    .catch(err => next(err));
 });
 
 app.post("/api/people", (req, res) => {
@@ -52,15 +49,6 @@ app.post("/api/people", (req, res) => {
   if (!name || !number) {
     return res.status(400).json({ error: "name and number required" });
   }
-
-  // TBD
-  // const duplicate = checkDuplicate(name);
-
-  // if (duplicate) {
-  //   return res.status(400).json({
-  //     error: "name must be unique",
-  //   });
-  // }
 
   const person = new Person({
     name,
@@ -80,10 +68,21 @@ const unknownEndpoint = (req, res) => {
   res.status(404).send({ error: "unknown endpoint" });
 };
 
-// TBD
-// const checkDuplicate = name => people.some(person => person.name === name);
-
 app.use(unknownEndpoint);
+
+const errorHandler = (error, req, res, next) => {
+  console.log(error.message);
+
+  // If error is invalid object id for Mongo
+  if (error.name === "CastError") {
+    return res.status(400).send({ error: "malformatted id" });
+  }
+
+  // Otherwise, pass error to default Express error handler
+  next(error);
+};
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
