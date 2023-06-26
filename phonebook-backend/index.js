@@ -26,12 +26,14 @@ app.get("/api/people", (req, res) => {
   Person.find({}).then(person => res.json(person));
 });
 
-app.get("/info", (req, res) => {
+app.get("/info", async (req, res) => {
   const reqTime = new Date();
+  const phonebookLength = await Person.find().estimatedDocumentCount();
+  console.log(phonebookLength);
 
   res.send(
-    `<p>Phonebook has info for ${people.length} ${
-      people.length == 1 ? "person" : "people"
+    `<p>Phonebook has info for ${phonebookLength} ${
+      phonebookLength == 1 ? "person" : "people"
     }</p>
     <p>${reqTime}</p>`
   );
