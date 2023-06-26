@@ -1,0 +1,2 @@
+GET http://localhost:3001/api/people
+Content-Type: application/json

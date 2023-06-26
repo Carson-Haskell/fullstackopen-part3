@@ -1,12 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+const Person = require("./models/person");
 
 const app = express();
-
-app.use(cors());
-app.use(express.json());
-app.use(express.static("build"));
 
 morgan.token("body", (res, req) => {
   if (res.method !== "POST") return "No body provided";
@@ -14,30 +11,10 @@ morgan.token("body", (res, req) => {
   return JSON.stringify(res.body);
 });
 
+app.use(cors());
+app.use(express.json());
+app.use(express.static("build"));
 app.use(morgan(":method :url :status - :response-time ms - :body"));
-
-let people = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-234345",
-  },
-  {
-    id: 4,
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-  },
-];
 
 app.get("/", (req, res) => {
   res.send(
@@ -46,7 +23,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/people", (req, res) => {
-  res.json(people);
+  Person.find({}).then(person => res.json(person));
 });
 
 app.get("/info", (req, res) => {
@@ -61,10 +38,35 @@ app.get("/info", (req, res) => {
 });
 
 app.get("/api/people/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const person = people.find(person => person.id === id);
+  Person.findById(req.params.id)
+    .then(person => res.json(person))
+    .catch(err => {
+      console.log(err);
+      res.status(404).json({ error: "no such person exists" });
+    });
+});
 
-  person ? res.json(person) : res.status(404).end();
+app.post("/api/people", (req, res) => {
+  const { name, number } = req.body;
+
+  if (!name || !number) {
+    return res.status(400).json({ error: "name and number required" });
+  }
+
+  // const duplicate = checkDuplicate(name);
+
+  // if (duplicate) {
+  //   return res.status(400).json({
+  //     error: "name must be unique",
+  //   });
+  // }
+
+  const person = new Person({
+    name,
+    number,
+  });
+
+  person.save().then(savedPerson => res.json(savedPerson));
 });
 
 app.delete("/api/people/:id", (req, res) => {
@@ -74,41 +76,13 @@ app.delete("/api/people/:id", (req, res) => {
   res.status(204).end();
 });
 
-const checkDuplicate = name => people.some(person => person.name === name);
-
-app.post("/api/people", (req, res) => {
-  const { name, number } = req.body;
-
-  if (!name || !number) {
-    return res.status(400).json({
-      error: "name and number required",
-    });
-  }
-
-  const duplicate = checkDuplicate(name);
-
-  if (duplicate) {
-    return res.status(400).json({
-      error: "name must be unique",
-    });
-  }
-
-  const person = {
-    name,
-    number,
-    id: Math.random(),
-  };
-
-  people = [...people, person];
-
-  res.json(person);
-});
-
 const unknownEndpoint = (req, res) => {
   res.status(404).send({ error: "unknown endpoint" });
 };
 
+// const checkDuplicate = name => people.some(person => person.name === name);
+
 app.use(unknownEndpoint);
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
