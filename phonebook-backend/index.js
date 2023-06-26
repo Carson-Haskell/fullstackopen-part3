@@ -71,10 +71,9 @@ app.post("/api/people", (req, res) => {
 });
 
 app.delete("/api/people/:id", (req, res) => {
-  const id = Number(req.params.id);
-  people = people.filter(person => person.id !== id);
-
-  res.status(204).end();
+  Person.findByIdAndDelete(req.params.id)
+    .then(result => res.status(204).end())
+    .catch(err => console.log(err));
 });
 
 const unknownEndpoint = (req, res) => {
