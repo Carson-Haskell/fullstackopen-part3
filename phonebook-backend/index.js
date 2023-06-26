@@ -53,6 +53,7 @@ app.post("/api/people", (req, res) => {
     return res.status(400).json({ error: "name and number required" });
   }
 
+  // TBD
   // const duplicate = checkDuplicate(name);
 
   // if (duplicate) {
@@ -80,6 +81,7 @@ const unknownEndpoint = (req, res) => {
   res.status(404).send({ error: "unknown endpoint" });
 };
 
+// TBD
 // const checkDuplicate = name => people.some(person => person.name === name);
 
 app.use(unknownEndpoint);
