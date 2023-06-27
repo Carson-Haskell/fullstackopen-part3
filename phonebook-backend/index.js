@@ -45,30 +45,28 @@ app.get("/api/people/:id", (req, res, next) => {
     .catch(err => next(err));
 });
 
-app.post("/api/people", (req, res) => {
+app.post("/api/people", (req, res, next) => {
   const { name, number } = req.body;
-
-  if (!name || !number) {
-    return res.status(400).json({ error: "name and number required" });
-  }
 
   const person = new Person({
     name,
     number,
   });
 
-  person.save().then(savedPerson => res.json(savedPerson));
+  person
+    .save()
+    .then(savedPerson => res.json(savedPerson))
+    .catch(err => next(err));
 });
 
 app.put("/api/people/:id", (req, res, next) => {
   const { name, number } = req.body;
 
-  const person = {
-    name,
-    number,
-  };
-
-  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+  Person.findByIdAndUpdate(
+    req.params.id,
+    { name, number },
+    { new: true, runValidators: true, context: "query" }
+  )
     .then(updatedPerson => res.json(updatedPerson))
     .catch(err => next(err));
 });
@@ -91,6 +89,10 @@ const errorHandler = (error, req, res, next) => {
   // If error is invalid object id for Mongo
   if (error.name === "CastError") {
     return res.status(400).send({ error: "malformatted id" });
+  }
+  // If error fails personSchema validation
+  else if (error.name === "ValidationError") {
+    return res.status(400).json({ error: error.message });
   }
 
   // Otherwise, pass error to default Express error handler
