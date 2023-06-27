@@ -20,7 +20,15 @@ const personSchema = new mongoose.Schema({
   },
   number: {
     type: String,
+    minLength: 8,
     required: true,
+    validate: {
+      validator: number => {
+        const validNumber = /^\(?(\d{3})\)?[- ]?(\d{3})[- ]?(\d{4})$/;
+        return validNumber.test(number);
+      },
+      message: 'Error: number must be of format "xxx-xxx-xxxx"',
+    },
   },
 });
 
